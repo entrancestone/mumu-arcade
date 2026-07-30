@@ -30,6 +30,15 @@
     "thumbnail": "games/snake-game/screenshot.png",
     "tags": ["arcade"],
     "added": "2026-07-30"
-  }
+  },
+    {
+  "id": "neon-platformer",
+  "title": "霓虹闯关",
+  "description": "A neon cyberpunk side-scrolling platformer — 12 levels of running, jumping, and shooting through glowing enemies. Double-jump, dodge spikes, and blast your way to the exit.",
+  "folder": "games/level-game/index.html",
+  "thumbnail": "games/level-game/screenshot.png",
+  "tags": ["platformer", "arcade"],
+  "added": "2026-07-30"
+}
   ]
 }
