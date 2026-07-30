@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin — Homemade Arcade</title>
+<link rel="stylesheet" href="../style.css" />
+<style>
+  body { padding: 20px; }
+  .panel {
+    max-width: 640px;
+    margin: 60px auto;
+    background: var(--paper-light);
+    border-radius: var(--radius);
+    padding: 32px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+  }
+  .panel h1 { font-family:'Baloo 2',sans-serif; color:var(--navy); margin-top:0; }
+  label { display:block; font-family:'Space Mono',monospace; font-size:0.8rem; margin:14px 0 6px; color:#4a4238; }
+  input[type=text], input[type=password], textarea {
+    width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--paper-dark);
+    font-family:'Space Grotesk',sans-serif; font-size:0.95rem; background:#fffdf7;
+  }
+  textarea { min-height: 70px; resize: vertical; }
+  input[type=file] { font-family:'Space Grotesk',sans-serif; margin-top:4px; }
+  button.primary {
+    margin-top:20px; background:var(--coral); color:#fff8ea; border:none; padding:12px 22px;
+    border-radius:8px; font-family:'Baloo 2',sans-serif; font-weight:600; font-size:1rem; cursor:pointer;
+  }
+  button.primary:hover { background:#c93f2b; }
+  button.primary:disabled { opacity:0.5; cursor:not-allowed; }
+  .msg { margin-top:14px; font-family:'Space Mono',monospace; font-size:0.85rem; }
+  .msg.error { color:var(--coral); }
+  .msg.ok { color:var(--green); }
+  .game-row {
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:10px 0; border-bottom:1px solid var(--paper-dark);
+  }
+  .game-row:last-child { border-bottom:none; }
+  .game-row img { width:56px; height:40px; object-fit:cover; border-radius:4px; }
+  .game-row .info { display:flex; align-items:center; gap:10px; flex:1; }
+  .game-row .title { font-family:'Baloo 2',sans-serif; color:var(--navy); }
+  .del-btn {
+    background:none; border:1px solid var(--coral); color:var(--coral); padding:6px 12px;
+    border-radius:6px; font-family:'Space Mono',monospace; font-size:0.75rem; cursor:pointer;
+  }
+  .del-btn:hover { background:var(--coral); color:#fff; }
+  .logout { float:right; font-family:'Space Mono',monospace; font-size:0.8rem; background:none; border:none; color:#4a4238; cursor:pointer; text-decoration:underline; }
+  .hint { font-size:0.78rem; color:#6b6152; margin-top:4px; }
+</style>
+</head>
+<body>
+
+<div class="panel" id="login-panel">
+  <h1>Admin Login</h1>
+  <label for="password">Password</label>
+  <input type="password" id="password" placeholder="••••••••" />
+  <button class="primary" id="login-btn">Log in</button>
+  <div class="msg error" id="login-msg"></div>
+</div>
+
+<div class="panel" id="dash-panel" style="display:none;">
+  <button class="logout" id="logout-btn">Log out</button>
+  <h1>Add a Game</h1>
+
+  <label for="title">Title</label>
+  <input type="text" id="title" placeholder="Space Quest" />
+
+  <label for="description">Description</label>
+  <textarea id="description" placeholder="A short one-line description"></textarea>
+
+  <label for="tags">Tags (comma separated)</label>
+  <input type="text" id="tags" placeholder="arcade, platformer" />
+
+  <label for="game-file">Game file (single .html file)</label>
+  <input type="file" id="game-file" accept=".html" />
+  <div class="hint">The game should be one self-contained HTML file (inline CSS/JS).</div>
+
+  <label for="screenshot-file">Screenshot (optional)</label>
+  <input type="file" id="screenshot-file" accept="image/*" />
+
+  <button class="primary" id="upload-btn">Upload Game</button>
+  <div class="msg" id="upload-msg"></div>
+
+  <h1 style="margin-top:40px;">Current Games</h1>
+  <div id="game-list"></div>
+</div>
+
+<script>
+const API = '/netlify/functions';
+let token = localStorage.getItem('arcade_admin_token') || null;
+
+const loginPanel = document.getElementById('login-panel');
+const dashPanel = document.getElementById('dash-panel');
+
+function showDash() {
+  loginPanel.style.display = 'none';
+  dashPanel.style.display = 'block';
+  loadGames();
+}
+
+if (token) showDash();
+
+document.getElementById('login-btn').onclick = async () => {
+  const password = document.getElementById('password').value;
+  const msg = document.getElementById('login-msg');
+  msg.textContent = '';
+  try {
+    const res = await fetch(`${API}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    });
+    const data = await res.json();
+    if (!res.ok) { msg.textContent = data.error || 'Login failed'; return; }
+    token = data.token;
+    localStorage.setItem('arcade_admin_token', token);
+    showDash();
+  } catch (e) {
+    msg.textContent = 'Network error: ' + e.message;
+  }
+};
+
+document.getElementById('logout-btn').onclick = () => {
+  localStorage.removeItem('arcade_admin_token');
+  token = null;
+  dashPanel.style.display = 'none';
+  loginPanel.style.display = 'block';
+};
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function slugify(str) {
+  return str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+document.getElementById('upload-btn').onclick = async () => {
+  const msg = document.getElementById('upload-msg');
+  msg.className = 'msg';
+  msg.textContent = '';
+
+  const title = document.getElementById('title').value.trim();
+  const description = document.getElementById('description').value.trim();
+  const tags = document.getElementById('tags').value.trim();
+  const gameFile = document.getElementById('game-file').files[0];
+  const screenshotFile = document.getElementById('screenshot-file').files[0];
+
+  if (!title || !gameFile) {
+    msg.className = 'msg error';
+    msg.textContent = 'Title and a game HTML file are required.';
+    return;
+  }
+
+  const btn = document.getElementById('upload-btn');
+  btn.disabled = true;
+  msg.textContent = 'Uploading…';
+
+  try {
+    const id = slugify(title);
+    const gameHtmlBase64 = await fileToBase64(gameFile);
+    let screenshotBase64 = null;
+    let screenshotExt = null;
+    if (screenshotFile) {
+      screenshotBase64 = await fileToBase64(screenshotFile);
+      screenshotExt = screenshotFile.name.split('.').pop();
+    }
+
+    const res = await fetch(`${API}/upload-game`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ id, title, description, tags, gameHtmlBase64, screenshotBase64, screenshotExt }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
+
+    msg.className = 'msg ok';
+    msg.textContent = `"${title}" uploaded! It'll be live in about a minute.`;
+    document.getElementById('title').value = '';
+    document.getElementById('description').value = '';
+    document.getElementById('tags').value = '';
+    document.getElementById('game-file').value = '';
+    document.getElementById('screenshot-file').value = '';
+    loadGames();
+  } catch (e) {
+    msg.className = 'msg error';
+    msg.textContent = e.message;
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+async function loadGames() {
+  const list = document.getElementById('game-list');
+  list.textContent = 'Loading…';
+  try {
+    const res = await fetch(`${API}/list-games`, { headers: { 'Authorization': `Bearer ${token}` } });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Could not load games');
+
+    if (!data.games || data.games.length === 0) {
+      list.innerHTML = '<p class="hint">No games yet.</p>';
+      return;
+    }
+
+    list.innerHTML = data.games.map(g => `
+      <div class="game-row" data-id="${g.id}">
+        <div class="info">
+          ${g.thumbnail ? `<img src="../${g.thumbnail}" alt="">` : ''}
+          <span class="title">${g.title}</span>
+        </div>
+        <button class="del-btn" data-id="${g.id}">Delete</button>
+      </div>
+    `).join('');
+
+    list.querySelectorAll('.del-btn').forEach(btn => {
+      btn.onclick = () => deleteGame(btn.dataset.id, btn);
+    });
+  } catch (e) {
+    list.innerHTML = `<p class="msg error">${e.message}</p>`;
+  }
+}
+
+async function deleteGame(id, btn) {
+  if (!confirm(`Delete "${id}"? This can't be undone.`)) return;
+  btn.disabled = true;
+  btn.textContent = 'Deleting…';
+  try {
+    const res = await fetch(`${API}/delete-game`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ id }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Delete failed');
+    loadGames();
+  } catch (e) {
+    alert(e.message);
+    btn.disabled = false;
+    btn.textContent = 'Delete';
+  }
+}
+</script>
+</body>
+</html>
