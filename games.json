@@ -5,24 +5,6 @@
   },
   "games": [
     {
-      "id": "demo-dodge",
-      "title": "Asteroid Dodge",
-      "description": "Steer clear of falling rocks for as long as you can. A demo game — swap this out for the real thing.",
-      "folder": "games/demo-dodge/index.html",
-      "thumbnail": "games/demo-dodge/screenshot.png",
-      "tags": ["arcade", "demo"],
-      "added": "2026-07-01"
-    },
-    {
-      "id": "demo-match",
-      "title": "Color Match",
-      "description": "Tap the tile that matches before time runs out. Another placeholder — replace with your son's games.",
-      "folder": "games/demo-match/index.html",
-      "thumbnail": "games/demo-match/screenshot.png",
-      "tags": ["puzzle", "demo"],
-      "added": "2026-07-10"
-    },
-    {
     "id": "snake",
     "title": "贪吃蛇",
     "description": "Classic snake — eat food to grow, dodge walls and obstacles. Speed increases as you score.",
@@ -48,6 +30,15 @@
   "thumbnail": "games/rocket-game/screenshot.png",
   "tags": ["arcade", "shooter"],
   "added": "2026-07-30"
-}
+},
+  {
+    "id": "pvz",
+    "title": "植物大战僵尸",
+    "description": "Plants vs. Zombies-style tower defense — plant sunflowers to generate sun, defend your lawn across 10 waves of increasingly tough zombies. Five plant types, four zombie types.",
+    "folder": "games/pvz-game/index.html",
+    "thumbnail": "games/pvz-game/screenshot.png",
+    "tags": ["tower-defense", "strategy"],
+    "added": "2026-07-30"
+  }
   ]
 }
