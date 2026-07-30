@@ -26,8 +26,8 @@
     "id": "snake",
     "title": "贪吃蛇",
     "description": "Classic snake — eat food to grow, dodge walls and obstacles. Speed increases as you score.",
-    "folder": "games/snake/index.html",
-    "thumbnail": "games/snake/screenshot.png",
+    "folder": "games/snake-game/index.html",
+    "thumbnail": "games/snake-game/screenshot.png",
     "tags": ["arcade"],
     "added": "2026-07-30"
   }
