@@ -39,6 +39,15 @@
   "thumbnail": "games/level-game/screenshot.png",
   "tags": ["platformer", "arcade"],
   "added": "2026-07-30"
+  },
+    {
+  "id": "rocket-game",
+  "title": "火箭消灭怪物",
+  "description": "Pilot your rocket and blast waves of alien invaders...",
+  "folder": "games/rocket-game/index.html",
+  "thumbnail": "games/rocket-game/screenshot.png",
+  "tags": ["arcade", "shooter"],
+  "added": "2026-07-30"
 }
   ]
 }
