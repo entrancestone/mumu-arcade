@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Asteroid Dodge</title>
+<style>
+  html,body { margin:0; height:100%; background:#0d1120; overflow:hidden; font-family:sans-serif; }
+  canvas { display:block; margin:0 auto; background:#0d1120; }
+  #score { position:fixed; top:10px; left:10px; color:#f2c230; font-family:monospace; font-size:18px; }
+  #msg { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); color:#fff; text-align:center; font-family:sans-serif; }
+</style>
+</head>
+<body>
+<div id="score">Score: 0</div>
+<div id="msg">Use ← → (or A/D) to dodge. This is a placeholder — swap in the real game.</div>
+<canvas id="c" width="480" height="600"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let player = { x: 220, y: 540, w: 40, h: 20 };
+let rocks = [];
+let score = 0;
+let running = true;
+let keys = {};
+
+document.addEventListener('keydown', e => keys[e.key] = true);
+document.addEventListener('keyup', e => keys[e.key] = false);
+
+function spawnRock() {
+  rocks.push({ x: Math.random() * 450, y: -20, r: 12 + Math.random() * 14, speed: 2 + Math.random() * 3 });
+}
+
+let frame = 0;
+function loop() {
+  if (!running) return;
+  frame++;
+  if (frame % 30 === 0) spawnRock();
+
+  if (keys['ArrowLeft'] || keys['a']) player.x -= 5;
+  if (keys['ArrowRight'] || keys['d']) player.x += 5;
+  player.x = Math.max(0, Math.min(440, player.x));
+
+  ctx.clearRect(0, 0, 480, 600);
+  ctx.fillStyle = '#f2c230';
+  ctx.fillRect(player.x, player.y, player.w, player.h);
+
+  rocks.forEach(r => {
+    r.y += r.speed;
+    ctx.beginPath();
+    ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
+    ctx.fillStyle = '#e2543e';
+    ctx.fill();
+
+    const dx = (r.x) - (player.x + player.w/2);
+    const dy = r.y - (player.y + player.h/2);
+    if (Math.sqrt(dx*dx + dy*dy) < r.r + 15) {
+      running = false;
+      document.getElementById('msg').textContent = 'Hit! Score: ' + score + ' — refresh to try again.';
+      document.getElementById('msg').style.display = 'block';
+    }
+  });
+
+  rocks = rocks.filter(r => r.y < 620);
+  score++;
+  document.getElementById('score').textContent = 'Score: ' + score;
+
+  if (frame > 60) document.getElementById('msg').style.display = 'none';
+
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>

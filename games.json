@@ -1,0 +1,26 @@
+{
+  "site": {
+    "name": "Homemade Arcade",
+    "tagline": "Every game here was built by one kid, one idea at a time. Pick one and press play."
+  },
+  "games": [
+    {
+      "id": "demo-dodge",
+      "title": "Asteroid Dodge",
+      "description": "Steer clear of falling rocks for as long as you can. A demo game — swap this out for the real thing.",
+      "folder": "games/demo-dodge/index.html",
+      "thumbnail": "games/demo-dodge/screenshot.png",
+      "tags": ["arcade", "demo"],
+      "added": "2026-07-01"
+    },
+    {
+      "id": "demo-match",
+      "title": "Color Match",
+      "description": "Tap the tile that matches before time runs out. Another placeholder — replace with your son's games.",
+      "folder": "games/demo-match/index.html",
+      "thumbnail": "games/demo-match/screenshot.png",
+      "tags": ["puzzle", "demo"],
+      "added": "2026-07-10"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Playing… — Homemade Arcade</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body style="background:var(--navy);">
+
+<div class="play-header">
+  <h1 id="game-title">Loading…</h1>
+  <a class="back-link" href="index.html">&larr; Back to arcade</a>
+</div>
+
+<div class="play-frame-wrap">
+  <iframe id="game-frame" class="game-frame" title="Game"></iframe>
+</div>
+
+<script>
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  const res = await fetch('games.json');
+  const data = await res.json();
+  const game = data.games.find(g => g.id === id);
+
+  if (!game) {
+    document.getElementById('game-title').textContent = 'Game not found';
+    document.querySelector('.play-frame-wrap').innerHTML =
+      '<p style="color:#f2c230;font-family:\'Space Mono\',monospace;">' +
+      'That game id was not found in games.json. Check the link and try again.</p>';
+    return;
+  }
+
+  document.title = game.title + ' — Homemade Arcade';
+  document.getElementById('game-title').textContent = game.title;
+  document.getElementById('game-frame').src = game.folder;
+}
+init();
+</script>
+</body>
+</html>
